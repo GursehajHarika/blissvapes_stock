@@ -30,18 +30,7 @@ import { serialize } from "../serialize.server";
 
 const DEFAULT_PAGE_SIZE = 25;
 
-/* ------------------ PERF: only revalidate when it matters ------------------ */
-export const shouldRevalidate = ({ currentUrl, nextUrl, formMethod }) => {
-  if (formMethod && formMethod !== "GET") return true; // after POST actions
-  return currentUrl.search !== nextUrl.search;         // when filters/pagination change
-};
-
-/* ------------------ Small private cache to speed back/forward -------------- */
-export const headers = () => ({
-  "Cache-Control": "private, max-age=5, stale-while-revalidate=30",
-});
-
-/* ------------------ SERVER: loader (staff) --------------------------------- */
+/* ------------------ SERVER: loader (staff) ------------------ */
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
 
@@ -105,7 +94,7 @@ export const loader = async ({ request }) => {
   );
 };
 
-/* ------------------ CLIENT (staff) ---------------------------------------- */
+/* ------------------ CLIENT (staff) ------------------ */
 function toastText(data) {
   if (!data) return "Saved";
   if (typeof data === "string") return data;
@@ -127,36 +116,29 @@ export default function StaffHome() {
   const revalidator = useRevalidator();
   const shopify = useAppBridge();
 
-  // fetchers
-  const countFetcher = useFetcher(); // POST /app/counts/add
-  const syncFetcher = useFetcher();  // POST /app/sync/products
+  // fetcher for saving counts
+  const countFetcher = useFetcher();
 
   // toast once per completed action
   const didToastRef = useRef(false);
-  const anySubmitting =
-    (["loading", "submitting"].includes(countFetcher.state) &&
-      countFetcher.formMethod === "POST") ||
-    (["loading", "submitting"].includes(syncFetcher.state) &&
-      syncFetcher.formMethod === "POST");
+  const submitting =
+    ["loading", "submitting"].includes(countFetcher.state) &&
+    countFetcher.formMethod === "POST";
 
   useEffect(() => {
-    if (anySubmitting) didToastRef.current = false;
-  }, [anySubmitting]);
+    if (submitting) didToastRef.current = false;
+  }, [submitting]);
 
   useEffect(() => {
-    const finished =
-      (countFetcher.state === "idle" && countFetcher.data?.ok) ||
-      (syncFetcher.state === "idle" && syncFetcher.data?.ok);
-
+    const finished = countFetcher.state === "idle" && countFetcher.data?.ok;
     if (finished && !didToastRef.current) {
       didToastRef.current = true;
-      const msg = toastText(countFetcher.data || syncFetcher.data);
       try {
-        shopify.toast.show(msg);
+        shopify.toast.show(toastText(countFetcher.data));
       } catch {}
       revalidator.revalidate();
     }
-  }, [countFetcher.state, countFetcher.data, syncFetcher.state, syncFetcher.data, revalidator, shopify]);
+  }, [countFetcher.state, countFetcher.data, revalidator, shopify]);
 
   // filter by product title (server-side, keeps pagination correct)
   const urlTitle = searchParams.get("title") || "";
@@ -168,14 +150,13 @@ export default function StaffHome() {
     if (value) params.set("title", value);
     else params.delete("title");
     params.set("page", "1");
-    // preventScrollReset to avoid jump; replace to avoid history spam
     navigate(`?${params.toString()}`, { preventScrollReset: true, replace: true });
   };
 
-  const titleOptions = useMemo(
-    () => [{ label: "All products", value: "" }, ...titles.map((t) => ({ label: t, value: t }))],
-    [titles],
-  );
+  const titleOptions = [
+    { label: "All products", value: "" },
+    ...titles.map((t) => ({ label: t, value: t })),
+  ];
 
   // pagination
   const hasPrevious = page > 1;
@@ -230,14 +211,12 @@ export default function StaffHome() {
     [items, countedByVariant],
   );
 
-  // summary for this page
+  // simple summary for staff page: how many items have any saved count
   const summary = useMemo(() => {
     let withCount = 0;
     for (const i of items) if (i.latestCount != null) withCount++;
     return { total: items.length, withCount };
   }, [items]);
-
-  const syncing = ["loading", "submitting"].includes(syncFetcher.state);
 
   return (
     <Page>
@@ -245,21 +224,13 @@ export default function StaffHome() {
 
       <Layout>
         <Layout.Section>
-          {/* Header: Summary + Sync */}
+          {/* Summary */}
           <Card>
-            <BlockStack gap="300">
-              <InlineStack align="space-between" blockAlign="center">
-                <InlineStack gap="300">
-                  <Badge tone="new">Total variants: {summary.total}</Badge>
-                  <Badge tone="success">With saved count: {summary.withCount}</Badge>
-                </InlineStack>
-
-                {/* Sync products (staff page too) */}
-                <syncFetcher.Form method="post" action="/app/sync/products">
-                  <Button submit loading={syncing}>
-                    {syncing ? "Syncing…" : "Sync products"}
-                  </Button>
-                </syncFetcher.Form>
+            <BlockStack gap="200">
+              <Text as="h2" variant="headingSm">Summary (this page)</Text>
+              <InlineStack gap="300">
+                <Badge tone="new">Total variants: {summary.total}</Badge>
+                <Badge tone="success">With saved count: {summary.withCount}</Badge>
               </InlineStack>
             </BlockStack>
           </Card>

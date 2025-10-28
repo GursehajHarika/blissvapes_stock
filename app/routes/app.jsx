@@ -8,7 +8,7 @@ import { authenticate } from "../shopify.server";
 
 export const links = () => [
   { rel: "stylesheet", href: polarisStyles },
-
+  // optional prefetch to make page switches feel snappier:
   { rel: "prefetch", as: "document", href: "/app/admin" },
   { rel: "prefetch", as: "document", href: "/app/additional" },
 ];
