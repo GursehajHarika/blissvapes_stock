@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "remix vite:build",
-    "dev": "remix vite:dev",
+    "start": "remix-serve ./build/server/index.js",
     "postinstall": "prisma generate",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",

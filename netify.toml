@@ -1,15 +1,15 @@
-# netlify.toml (at the root of the repo)
+# netlify.toml
 
 [build]
   command = "npm run build"
   publish = "build/client"
   functions = "netlify/functions"
 
-# Optional: keep this if you still want the Prisma plugin
+# (Optional) Prisma plugin if you still want it
 [[plugins]]
   package = "@netlify/prisma-plugin"
 
-# 🔥 Critical: send ALL routes to the Remix server function
+# 🔥 Critical: route ALL requests into the Remix server function
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/server"
