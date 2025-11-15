@@ -5,3 +5,8 @@
 
 [[plugins]]
   package = "@netlify/prisma-plugin"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/server"
+  status = 200
