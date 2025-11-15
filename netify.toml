@@ -5,12 +5,10 @@
   publish = "build/client"
   functions = "netlify/functions"
 
-# (Optional) Prisma plugin if you still want it
 [[plugins]]
   package = "@netlify/prisma-plugin"
 
-# 🔥 Critical: route ALL requests into the Remix server function
 [[redirects]]
-  from = "/"
-  to = "/app"
-  status = 301
+  from = "/*"
+  to = "/.netlify/functions/server"
+  status = 200
