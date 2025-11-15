@@ -11,6 +11,6 @@
 
 # 🔥 Critical: route ALL requests into the Remix server function
 [[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/server"
-  status = 200
+  from = "/"
+  to = "/app"
+  status = 301
