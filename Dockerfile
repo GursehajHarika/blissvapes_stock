@@ -1,32 +1,29 @@
-# Use a current LTS Node version
-FROM node:20-alpine
-
-# Prisma needs OpenSSL
+FROM node:18-alpine
 RUN apk add --no-cache openssl
 
-# App directory
-WORKDIR /app
-
-# Environment
-ENV NODE_ENV=production
-
-# Install dependencies (production only) with proper caching
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-
-COPY . .
-
-# Make sure Prisma client is generated before building
-RUN npx prisma generate
-
-# Build Remix (server + client)
-RUN npm run build
-
-# Render will inject PORT at runtime; default to 3000 for local runs
-ENV PORT=3000
 EXPOSE 3000
 
-# At runtime: run migrations + start the app
-# "docker-start" = "npm run setup && npm run start"
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# 1. Copy manifest files
+COPY package.json package-lock.json* ./
+
+# 2. 🔑 Make sure Prisma schema is present for postinstall ("prisma generate")
+COPY prisma ./prisma
+
+# 3. Install deps (prod only); postinstall will now see prisma/schema.prisma
+RUN npm ci --omit=dev && npm cache clean --force
+
+# 4. Optional: remove Shopify CLI if you don’t need it in the container
+RUN npm remove @shopify/cli || true
+
+# 5. Copy the rest of your app
+COPY . .
+
+# 6. Build Remix app
+RUN npm run build
+
+# 7. Start: runs "setup" (migrations) then "start" (Remix server)
 CMD ["npm", "run", "docker-start"]
