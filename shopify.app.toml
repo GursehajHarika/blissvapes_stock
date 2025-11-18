@@ -1,8 +1,8 @@
-# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
-
 client_id = "0db15fae1cdf671991dbada73a030b26"
 name = "Bliss vapes stock check"
-application_url = "https://example.com"
+
+# 👇 Your Render production URL (no /app here)
+application_url = "https://blissvapes-stockapp.onrender.com"
 embedded = true
 
 [build]
@@ -13,16 +13,19 @@ include_config_on_deploy = true
 api_version = "2025-10"
 
   [[webhooks.subscriptions]]
-  topics = [ "app/scopes_update" ]
+  topics = ["app/scopes_update"]
   uri = "/webhooks/app/scopes_update"
 
   [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
+  topics = ["app/uninstalled"]
   uri = "/webhooks/app/uninstalled"
 
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_products,write_products,read_inventory,write_inventory,read_locations"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+# 👇 Redirect URL must match your app’s auth handler
+redirect_urls = [
+  "https://blissvapes-stockapp.onrender.com/auth/callback",
+  "https://blissvapes-stockapp.onrender.com/auth"  # optional but harmless
+]
