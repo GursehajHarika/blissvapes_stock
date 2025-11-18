@@ -1,8 +1,8 @@
+# shopify.app.toml
+
 client_id = "0db15fae1cdf671991dbada73a030b26"
 name = "Bliss vapes stock check"
-
-# 👇 Your Render production URL (no /app here)
-application_url = "https://blissvapes-stockapp.onrender.com"
+application_url = "https://blissvapes-stockapp.onrender.com/app"
 embedded = true
 
 [build]
@@ -24,8 +24,7 @@ api_version = "2025-10"
 scopes = "read_products,write_products,read_inventory,write_inventory,read_locations"
 
 [auth]
-# 👇 Redirect URL must match your app’s auth handler
+# Auth routes are handled by shopify-app-remix. These must match your Render URL.
 redirect_urls = [
-  "https://blissvapes-stockapp.onrender.com/auth/callback",
-  "https://blissvapes-stockapp.onrender.com/auth"  # optional but harmless
+  "https://blissvapes-stockapp.onrender.com/auth/callback"
 ]
