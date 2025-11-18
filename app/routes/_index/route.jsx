@@ -54,17 +54,38 @@
 //   );
 // }
 // app/routes/_index/route.jsx
-import { redirect } from "@remix-run/node";
+// app/routes/_index.jsx
+import { json } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 
-/**
- * Root route — redirect immediately to the embedded Shopify app (/app)
- * Netlify will route "/" to this file, and this sends the user to /app.
- */
 export const loader = async () => {
-  return redirect("/app");
+  // simple health/info response
+  return json({
+    status: "ok",
+    app: "Bliss Vapes Stock Check",
+    message: "Backend is running. Open this app from your Shopify Admin.",
+  });
 };
 
-export default function IndexRedirect() {
-  // No UI needed because this route always redirects.
-  return null;
+export default function RootInfoPage() {
+  const data = useLoaderData();
+
+  return (
+    <html>
+      <head>
+        <title>{data.app}</title>
+      </head>
+      <body style={{ fontFamily: "system-ui, sans-serif", padding: "2rem" }}>
+        <h1>{data.app}</h1>
+        <p>{data.message}</p>
+        <p>
+          Dev URL: <code>https://cfms-dev.myshopify.com/admin/apps</code>
+        </p>
+        <p>
+          Once there, click <strong>“Bliss vapes stock check”</strong> to launch the
+          embedded app.
+        </p>
+      </body>
+    </html>
+  );
 }
