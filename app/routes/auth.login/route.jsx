@@ -1,3 +1,4 @@
+// app/routes/auth.login/route.jsx
 import { useState } from "react";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import {
@@ -11,18 +12,29 @@ import {
 } from "@shopify/polaris";
 import polarisTranslations from "@shopify/polaris/locales/en.json";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
+
 import { login } from "../../shopify.server";
 import { loginErrorMessage } from "./error.server";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }) => {
+  // ✅ Handle Shopify HEAD preflight/health check safely
+  if (request.method === "HEAD") {
+    return new Response(null, { status: 200 });
+  }
+
   const errors = loginErrorMessage(await login(request));
 
   return { errors, polarisTranslations };
 };
 
 export const action = async ({ request }) => {
+  // ✅ Same safeguard for HEAD on action
+  if (request.method === "HEAD") {
+    return new Response(null, { status: 200 });
+  }
+
   const errors = loginErrorMessage(await login(request));
 
   return {
@@ -53,7 +65,7 @@ export default function Auth() {
                 value={shop}
                 onChange={setShop}
                 autoComplete="on"
-                error={errors.shop}
+                error={errors?.shop}
               />
               <Button submit>Log in</Button>
             </FormLayout>
