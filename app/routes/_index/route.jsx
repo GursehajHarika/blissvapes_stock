@@ -55,37 +55,24 @@
 // }
 // app/routes/_index/route.jsx
 // app/routes/_index.jsx
-import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+// app/routes/auth.login/route.jsx
+import { login } from "../../shopify.server";
 
-export const loader = async () => {
-  // simple health/info response
-  return json({
-    status: "ok",
-    app: "Bliss Vapes Stock Check",
-    message: "Backend is running. Open this app from your Shopify Admin.",
-  });
+/**
+ * For embedded apps, /auth/login should just call Shopify's login()
+ * so it can start or resume OAuth based on the request (shop, host, etc).
+ * We don't render a custom Polaris UI here.
+ */
+
+export const loader = async ({ request }) => {
+  return login(request);
 };
 
-export default function RootInfoPage() {
-  const data = useLoaderData();
+export const action = async ({ request }) => {
+  return login(request);
+};
 
-  return (
-    <html>
-      <head>
-        <title>{data.app}</title>
-      </head>
-      <body style={{ fontFamily: "system-ui, sans-serif", padding: "2rem" }}>
-        <h1>{data.app}</h1>
-        <p>{data.message}</p>
-        <p>
-          Dev URL: <code>https://cfms-dev.myshopify.com/admin/apps</code>
-        </p>
-        <p>
-          Once there, click <strong>“Bliss vapes stock check”</strong> to launch the
-          embedded app.
-        </p>
-      </body>
-    </html>
-  );
+export default function AuthLogin() {
+  // Remix requires a default component, but Shopify handles everything via redirects.
+  return null;
 }
