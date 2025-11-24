@@ -56,23 +56,22 @@
 // app/routes/_index/route.jsx
 // app/routes/_index.jsx
 // app/routes/auth.login/route.jsx
-import { login } from "../../shopify.server";
+// app/routes/_index/route.jsx
+import { redirect } from "@remix-run/node";
 
 /**
- * For embedded apps, /auth/login should just call Shopify's login()
- * so it can start or resume OAuth based on the request (shop, host, etc).
- * We don't render a custom Polaris UI here.
+ * Root of the Render app (`/`).
+ * Shopify doesn't need this, but if something hits `/`
+ * (like a HEAD check) we just redirect to /auth/login.
  */
-
-export const loader = async ({ request }) => {
-  return login(request);
+export const loader = async () => {
+  return redirect("/auth/login");
 };
 
-export const action = async ({ request }) => {
-  return login(request);
-};
+// If Remix ever posts here, treat it the same.
+export const action = loader;
 
-export default function AuthLogin() {
-  // Remix requires a default component, but Shopify handles everything via redirects.
+export default function Index() {
+  // This never actually renders because we always redirect.
   return null;
 }
