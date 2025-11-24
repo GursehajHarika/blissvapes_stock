@@ -2,7 +2,7 @@
 
 client_id = "0db15fae1cdf671991dbada73a030b26"
 name = "Bliss vapes stock check"
-application_url = "https://blissvapes-stockapp.onrender.com/app"
+application_url = "https://blissvapes-stockapp.onrender.com/auth/login"
 embedded = true
 
 [build]
@@ -24,7 +24,7 @@ api_version = "2025-10"
 scopes = "read_products,write_products,read_inventory,write_inventory,read_locations"
 
 [auth]
-# Auth routes are handled by shopify-app-remix. These must match your Render URL.
+# IMPORTANT: this must match your Render URL + /auth/callback
 redirect_urls = [
   "https://blissvapes-stockapp.onrender.com/auth/callback"
 ]
