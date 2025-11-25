@@ -1,15 +1,16 @@
 # shopify.app.toml
 client_id = "0db15fae1cdf671991dbada73a030b26"
 name = "Bliss vapes stock check"
-application_url = "https://blissvapes-stockapp.onrender.com/auth/login"
+application_url = "https://blissvapes-stockapp.onrender.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
+dev_store_url = "cfms-dev.myshopify.com"
 include_config_on_deploy = true
 
 [webhooks]
-api_version = "2025-01"
+api_version = "2025-10"
 
   [[webhooks.subscriptions]]
   topics = ["app/scopes_update"]
@@ -24,5 +25,6 @@ scopes = "read_products,write_products,read_inventory,write_inventory,read_locat
 
 [auth]
 redirect_urls = [
+  "https://blissvapes-stockapp.onrender.com/auth/login",
   "https://blissvapes-stockapp.onrender.com/auth/callback"
 ]
