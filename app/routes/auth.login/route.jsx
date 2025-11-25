@@ -1,6 +1,9 @@
-// app/routes/auth.login/route.jsx
 import { useState } from "react";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+} from "@remix-run/react";
 import {
   AppProvider as PolarisAppProvider,
   Button,
@@ -10,45 +13,59 @@ import {
   Text,
   TextField,
 } from "@shopify/polaris";
+
 import polarisTranslations from "@shopify/polaris/locales/en.json";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
+
+import { json } from "@remix-run/node";
 
 import { login } from "../../shopify.server";
 import { loginErrorMessage } from "./error.server";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
-// ❗ Loader must NOT call `login(request)` or touch FormData.
+/* ----------------------------- LOADER ----------------------------- */
+
 export const loader = async ({ request }) => {
-  // Handle HEAD checks gracefully (Shopify or uptime checks).
+  // Shopify pings via HEAD before rendering inside iframe
   if (request.method === "HEAD") {
-    return new Response(null, { status: 200 });
+    return json({
+      errors: null,
+      polarisTranslations,
+    });
   }
 
-  // Initial page load: just render empty form, no errors.
-  return {
-    errors: {},
-    polarisTranslations,
-  };
-};
+  const errors = loginErrorMessage(await login(request));
 
-// ❗ Action is the only place we call `login(request)`
-export const action = async ({ request }) => {
-  const result = await login(request);
-  const errors = loginErrorMessage(result);
-
-  return {
+  return json({
     errors,
     polarisTranslations,
-  };
+  });
 };
 
-export default function AuthLogin() {
+/* ----------------------------- ACTION ----------------------------- */
+
+export const action = async ({ request }) => {
+  // HEAD requests cannot contain formData → must skip to avoid FormData crash
+  if (request.method === "HEAD") {
+    return json({ ok: true });
+  }
+
+  const errors = loginErrorMessage(await login(request));
+
+  return json({
+    errors,
+  });
+};
+
+/* ----------------------------- COMPONENT ----------------------------- */
+
+export default function Auth() {
   const loaderData = useLoaderData();
   const actionData = useActionData();
-  const [shop, setShop] = useState("");
 
-  const { errors } = actionData || loaderData;
+  const [shop, setShop] = useState("");
+  const errors = actionData?.errors || loaderData?.errors;
 
   return (
     <PolarisAppProvider i18n={loaderData.polarisTranslations}>
@@ -59,6 +76,7 @@ export default function AuthLogin() {
               <Text variant="headingMd" as="h2">
                 Log in
               </Text>
+
               <TextField
                 type="text"
                 name="shop"
@@ -69,6 +87,7 @@ export default function AuthLogin() {
                 autoComplete="on"
                 error={errors?.shop}
               />
+
               <Button submit>Log in</Button>
             </FormLayout>
           </Form>
