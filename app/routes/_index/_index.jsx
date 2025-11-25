@@ -1,44 +1,44 @@
 // app/routes/_index.jsx
-import { redirect } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
-  const url = new URL(request.url);
-  const method = request.method;
+  console.log("[INDEX] loader start:", request.method, request.url);
 
-  console.log("[INDEX] Incoming:", method, url.toString());
+  // This handles Shopify admin auth (sessions, redirects, etc.)
+  const { admin, redirect } = await authenticate.admin(request);
 
-  if (method === "HEAD") {
-    console.log("[INDEX] HEAD request → 200 OK");
-    return new Response(null, { status: 200 });
+  if (redirect) {
+    const loc = redirect.headers?.get?.("Location");
+    console.log("[INDEX] authenticate.admin → redirecting to:", loc);
+    return redirect;
   }
 
-  const shop = url.searchParams.get("shop");
-  const host = url.searchParams.get("host");
-  const embedded = url.searchParams.get("embedded");
-  const idToken = url.searchParams.get("id_token");
+  console.log("[INDEX] authenticate.admin → OK for shop:", admin.session.shop);
 
-  console.log("[INDEX] Params:", { shop, host, embedded, idToken });
-
-  if (shop || host || embedded === "1" || idToken) {
-    console.log("[INDEX] → Authenticate admin()");
-    const { redirect: authRedirect } = await authenticate.admin(request);
-
-    if (authRedirect) {
-      console.log("[INDEX] authenticate.admin → redirecting user");
-      return authRedirect;
-    }
-
-    console.log("[INDEX] authenticate.admin → valid session, redirecting to /app");
-    return redirect("/app");
-  }
-
-  console.log("[INDEX] No Shopify params → redirect /auth/login");
-  return redirect("/auth/login");
+  return json({ shop: admin.session.shop });
 };
 
 export const action = loader;
 
 export default function Index() {
-  return null;
+  const { shop } = useLoaderData();
+  console.log("[INDEX] component render for shop:", shop);
+
+  return (
+    <div
+      style={{
+        padding: 16,
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif',
+      }}
+    >
+      <h1>Bliss Vapes Stock App</h1>
+      <p>
+        Connected shop: <strong>{shop}</strong>
+      </p>
+      <p>If you can see this, Shopify auth + UI rendering are working.</p>
+    </div>
+  );
 }
