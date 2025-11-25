@@ -18,42 +18,36 @@ import { loginErrorMessage } from "./error.server";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
-/**
- * LOADER:
- * - For HEAD: just say "OK" (no body parsing).
- * - For GET: render the login form, *without* calling `login()`.
- *   (login() is only used in the action on POST.)
- */
+// ❗ Loader must NOT call `login(request)` or touch FormData.
 export const loader = async ({ request }) => {
+  // Handle HEAD checks gracefully (Shopify or uptime checks).
   if (request.method === "HEAD") {
-    // Shopify sometimes probes routes with HEAD; don't try to parse FormData
     return new Response(null, { status: 200 });
   }
 
-  // Initial page load: just show empty form, no error
-  const errors = {};
-  return { errors, polarisTranslations };
+  // Initial page load: just render empty form, no errors.
+  return {
+    errors: {},
+    polarisTranslations,
+  };
 };
 
-/**
- * ACTION:
- * - Handles the login form POST.
- * - Here we call `login(request)`, which:
- *   - Validates the `shop` param
- *   - Redirects to Shopify OAuth/install flow when valid
- *   - Returns an object with errors when invalid (handled by loginErrorMessage)
- */
+// ❗ Action is the only place we call `login(request)`
 export const action = async ({ request }) => {
   const result = await login(request);
   const errors = loginErrorMessage(result);
-  return { errors };
+
+  return {
+    errors,
+    polarisTranslations,
+  };
 };
 
 export default function AuthLogin() {
   const loaderData = useLoaderData();
   const actionData = useActionData();
-
   const [shop, setShop] = useState("");
+
   const { errors } = actionData || loaderData;
 
   return (
