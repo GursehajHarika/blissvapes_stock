@@ -6,18 +6,18 @@ import { authenticate } from "../shopify.server";
 export const loader = async ({ request }) => {
   console.log("[INDEX] loader start:", request.method, request.url);
 
-  // This handles Shopify admin auth (sessions, redirects, etc.)
-  const { admin, redirect } = await authenticate.admin(request);
+  const auth = await authenticate.admin(request);
 
-  if (redirect) {
-    const loc = redirect.headers?.get?.("Location");
+  // If Shopify auth layer wants a redirect (install / re-auth)
+  if (auth.redirect) {
+    const loc = auth.redirect.headers?.get?.("Location");
     console.log("[INDEX] authenticate.admin → redirecting to:", loc);
-    return redirect;
+    return auth.redirect;
   }
 
-  console.log("[INDEX] authenticate.admin → OK for shop:", admin.session.shop);
+  console.log("[INDEX] authenticate.admin → OK for shop:", auth.admin.session.shop);
 
-  return json({ shop: admin.session.shop });
+  return json({ shop: auth.admin.session.shop });
 };
 
 export const action = loader;
