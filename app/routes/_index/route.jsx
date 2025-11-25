@@ -57,21 +57,27 @@
 // app/routes/_index.jsx
 // app/routes/auth.login/route.jsx
 // app/routes/_index/route.jsx
-import { redirect } from "@remix-run/node";
 
-/**
- * Root of the Render app (`/`).
- * Shopify doesn't need this, but if something hits `/`
- * (like a HEAD check) we just redirect to /auth/login.
- */
-export const loader = async () => {
-  return redirect("/auth/login");
+
+
+
+
+
+import { redirect } from "@remix-run/node";
+import { authenticate } from "../shopify.server";
+
+
+export const loader = async ({ request }) => {
+
+  await authenticate.admin(request);
+
+  return redirect("/app");
 };
 
-// If Remix ever posts here, treat it the same.
+
 export const action = loader;
 
 export default function Index() {
-  // This never actually renders because we always redirect.
+
   return null;
 }
