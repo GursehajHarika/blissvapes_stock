@@ -1,98 +1,33 @@
-import { useState } from "react";
-import {
-  Form,
-  useActionData,
-  useLoaderData,
-} from "@remix-run/react";
-import {
-  AppProvider as PolarisAppProvider,
-  Button,
-  Card,
-  FormLayout,
-  Page,
-  Text,
-  TextField,
-} from "@shopify/polaris";
-
-import polarisTranslations from "@shopify/polaris/locales/en.json";
-import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
-
+// app/routes/auth.login/route.jsx
 import { json } from "@remix-run/node";
-
 import { login } from "../../shopify.server";
-import { loginErrorMessage } from "./error.server";
 
-export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
-
-/* ----------------------------- LOADER ----------------------------- */
-
+// Handle Shopify & browser preflight HEAD requests safely
 export const loader = async ({ request }) => {
-  // Shopify pings via HEAD before rendering inside iframe
   if (request.method === "HEAD") {
-    return json({
-      errors: null,
-      polarisTranslations,
-    });
+    // Don’t try to parse FormData or run login — just say “OK”
+    return new Response(null, { status: 200 });
   }
 
-  const errors = loginErrorMessage(await login(request));
-
-  return json({
-    errors,
-    polarisTranslations,
-  });
+  // Delegate everything to Shopify’s login helper
+  // This will:
+  // - Redirect to Shopify if needed (OAuth)
+  // - Redirect back to /app after install/auth
+  // - Return JSON errors only in edge cases
+  return login(request);
 };
-
-/* ----------------------------- ACTION ----------------------------- */
 
 export const action = async ({ request }) => {
-  // HEAD requests cannot contain formData → must skip to avoid FormData crash
   if (request.method === "HEAD") {
-    return json({ ok: true });
+    return new Response(null, { status: 200 });
   }
 
-  const errors = loginErrorMessage(await login(request));
-
-  return json({
-    errors,
-  });
+  return login(request);
 };
 
-/* ----------------------------- COMPONENT ----------------------------- */
-
-export default function Auth() {
-  const loaderData = useLoaderData();
-  const actionData = useActionData();
-
-  const [shop, setShop] = useState("");
-  const errors = actionData?.errors || loaderData?.errors;
-
-  return (
-    <PolarisAppProvider i18n={loaderData.polarisTranslations}>
-      <Page>
-        <Card>
-          <Form method="post">
-            <FormLayout>
-              <Text variant="headingMd" as="h2">
-                Log in
-              </Text>
-
-              <TextField
-                type="text"
-                name="shop"
-                label="Shop domain"
-                helpText="example.myshopify.com"
-                value={shop}
-                onChange={setShop}
-                autoComplete="on"
-                error={errors?.shop}
-              />
-
-              <Button submit>Log in</Button>
-            </FormLayout>
-          </Form>
-        </Card>
-      </Page>
-    </PolarisAppProvider>
-  );
+// We don’t render a UI here for embedded apps.
+// Shopify will redirect into Admin and load /app after auth.
+// You *can* render a fallback if you want, but it’s not required.
+export default function AuthLogin() {
+  return null;
 }
