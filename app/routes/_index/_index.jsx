@@ -2,19 +2,14 @@
 import { redirect } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 
-/**
- * Root entry for the app.
- * - Shopify Admin hits `/` with embedded / id_token / shop params.
- *   We pass that to `authenticate.admin`, which will handle install/login.
- * - Direct browser hits go to /auth/login.
- */
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
   const method = request.method;
 
-  // Shopify (and Render) send a lot of HEAD probes.
-  // Just say "ok" and don't try to run auth logic.
+  console.log("[INDEX] Incoming:", method, url.toString());
+
   if (method === "HEAD") {
+    console.log("[INDEX] HEAD request → 200 OK");
     return new Response(null, { status: 200 });
   }
 
@@ -23,25 +18,27 @@ export const loader = async ({ request }) => {
   const embedded = url.searchParams.get("embedded");
   const idToken = url.searchParams.get("id_token");
 
-  // Requests coming from Shopify Admin (embedded app)
+  console.log("[INDEX] Params:", { shop, host, embedded, idToken });
+
   if (shop || host || embedded === "1" || idToken) {
+    console.log("[INDEX] → Authenticate admin()");
     const { redirect: authRedirect } = await authenticate.admin(request);
 
-    // If Shopify wants to redirect (install, re-auth, etc.)
-    if (authRedirect) return authRedirect;
+    if (authRedirect) {
+      console.log("[INDEX] authenticate.admin → redirecting user");
+      return authRedirect;
+    }
 
-    // If we got here, session is valid; send to the main app UI
+    console.log("[INDEX] authenticate.admin → valid session, redirecting to /app");
     return redirect("/app");
   }
 
-  // Non-Shopify traffic: show manual login screen
+  console.log("[INDEX] No Shopify params → redirect /auth/login");
   return redirect("/auth/login");
 };
 
-// Treat POST the same as GET for this route
 export const action = loader;
 
 export default function Index() {
-  // Never actually rendered; we always redirect in loader/action.
   return null;
 }
