@@ -13,6 +13,14 @@ export const links = () => [
   { rel: "prefetch", as: "document", href: "/app/additional" },
 ];
 
+export default function AppIndex() {
+  return (
+    <div>
+      <h1>App UI Loaded</h1>
+    </div>
+  );
+}
+
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
   return { apiKey: process.env.SHOPIFY_API_KEY || "" };
