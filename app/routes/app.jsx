@@ -2,24 +2,15 @@
 import { Link, Outlet, useLoaderData, useRouteError } from "@remix-run/react";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
-import { NavMenu } from "@shopify/app-bridge-react"; // ✅ original style
+import { NavMenu } from "@shopify/app-bridge-react";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 import { authenticate } from "../shopify.server";
 
 export const links = () => [
   { rel: "stylesheet", href: polarisStyles },
-  // optional prefetch to make page switches feel snappier:
   { rel: "prefetch", as: "document", href: "/app/admin" },
   { rel: "prefetch", as: "document", href: "/app/additional" },
 ];
-
-export default function AppIndex() {
-  return (
-    <div>
-      <h1>App UI Loaded</h1>
-    </div>
-  );
-}
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
@@ -31,7 +22,6 @@ export default function App() {
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
-      {/* App Bridge NavMenu (children links, original approach) */}
       <NavMenu>
         <Link to="/app" rel="home">
           Home
@@ -45,7 +35,6 @@ export default function App() {
   );
 }
 
-// Shopify needs Remix to catch thrown responses so headers are preserved
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
